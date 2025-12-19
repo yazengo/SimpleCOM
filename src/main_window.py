@@ -157,12 +157,6 @@ class MainWindow(QMainWindow):
         self.send_btn.setEnabled(False)
         controls_layout.addWidget(self.send_btn)
 
-        # Stop button for batch
-        self.batch_stop_btn = QPushButton("Stop")
-        self.batch_stop_btn.setFixedWidth(60)
-        self.batch_stop_btn.setEnabled(False)
-        controls_layout.addWidget(self.batch_stop_btn)
-
         send_main_layout.addLayout(controls_layout)
 
         left_layout.addWidget(send_group)
@@ -209,7 +203,6 @@ class MainWindow(QMainWindow):
         self.refresh_btn.clicked.connect(self._refresh_ports)
         self.connect_btn.clicked.connect(self._toggle_connection)
         self.send_btn.clicked.connect(self._start_send)
-        self.batch_stop_btn.clicked.connect(self._stop_batch_send)
         self.clear_receive_btn.clicked.connect(self._clear_receive)
         self.clear_history_btn.clicked.connect(self._clear_history)
         self.history_list.itemDoubleClicked.connect(self._history_item_clicked)
@@ -306,7 +299,6 @@ class MainWindow(QMainWindow):
 
         self._batch_index = 0
         self.send_btn.setEnabled(False)
-        self.batch_stop_btn.setEnabled(True)
         self.batch_text.setReadOnly(True)
 
         # Send first line immediately
@@ -360,7 +352,6 @@ class MainWindow(QMainWindow):
         self._batch_lines = []
         self._batch_index = 0
         self.send_btn.setEnabled(self.serial_worker.is_connected())
-        self.batch_stop_btn.setEnabled(False)
         self.batch_text.setReadOnly(False)
         self.status_bar.showMessage("Send stopped")
 
