@@ -133,6 +133,42 @@ def main():
             background-color: #89b4fa;
             color: #1e1e2e;
         }
+        QCheckBox {
+            color: #cdd6f4;
+            spacing: 8px;
+        }
+        QCheckBox::indicator {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #585b70;
+            border-radius: 4px;
+            background-color: #45475a;
+        }
+        QCheckBox::indicator:hover {
+            border-color: #89b4fa;
+        }
+        QCheckBox::indicator:checked {
+            background-color: #89b4fa;
+            border-color: #89b4fa;
+        }
+        QSpinBox {
+            background-color: #45475a;
+            color: #cdd6f4;
+            border: 1px solid #585b70;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        QSpinBox:hover {
+            border-color: #89b4fa;
+        }
+        QSpinBox::up-button, QSpinBox::down-button {
+            background-color: #585b70;
+            border: none;
+            width: 16px;
+        }
+        QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+            background-color: #89b4fa;
+        }
         QPushButton {
             background-color: #89b4fa;
             color: #1e1e2e;

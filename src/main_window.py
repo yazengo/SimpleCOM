@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QGridLayout, QLabel, QComboBox, QPushButton,
     QLineEdit, QTextEdit, QListWidget, QSplitter,
-    QGroupBox, QStatusBar, QMessageBox, QMenu, QSpinBox
+    QGroupBox, QStatusBar, QMessageBox, QMenu, QSpinBox, QCheckBox
 )
 from PyQt6.QtCore import Qt, QSettings, QTimer
 from PyQt6.QtGui import QFont, QKeyEvent, QColor, QPalette, QAction, QShortcut, QKeySequence
@@ -149,6 +149,11 @@ class MainWindow(QMainWindow):
         self.interval_spin.setFixedWidth(80)
         controls_layout.addWidget(self.interval_spin)
 
+        # Loop checkbox
+        self.loop_checkbox = QCheckBox("Loop")
+        self.loop_checkbox.setChecked(False)
+        controls_layout.addWidget(self.loop_checkbox)
+
         controls_layout.addStretch()
 
         # Send button
@@ -202,7 +207,7 @@ class MainWindow(QMainWindow):
         """Connect widget signals to slots."""
         self.refresh_btn.clicked.connect(self._refresh_ports)
         self.connect_btn.clicked.connect(self._toggle_connection)
-        self.send_btn.clicked.connect(self._start_send)
+        self.send_btn.clicked.connect(self._toggle_send)
         self.clear_receive_btn.clicked.connect(self._clear_receive)
         self.clear_history_btn.clicked.connect(self._clear_history)
         self.history_list.itemDoubleClicked.connect(self._history_item_clicked)
@@ -286,6 +291,15 @@ class MainWindow(QMainWindow):
             self._stop_batch_send()  # Stop batch if disconnected
             self.status_bar.showMessage("Disconnected")
 
+    def _toggle_send(self) -> None:
+        """Toggle between start and stop sending."""
+        if self._batch_timer.isActive() or len(self._batch_lines) > 0:
+            # Currently sending, stop it
+            self._stop_batch_send()
+        else:
+            # Start sending
+            self._start_send()
+
     def _start_send(self) -> None:
         """Start sending data (single or batch mode)."""
         text = self.batch_text.toPlainText().strip()
@@ -298,8 +312,9 @@ class MainWindow(QMainWindow):
             return
 
         self._batch_index = 0
-        self.send_btn.setEnabled(False)
+        self.send_btn.setText("Stop")
         self.batch_text.setReadOnly(True)
+        self.loop_checkbox.setEnabled(False)
 
         # Send first line immediately
         self._send_next_batch_line()
@@ -351,8 +366,10 @@ class MainWindow(QMainWindow):
         self._batch_timer.stop()
         self._batch_lines = []
         self._batch_index = 0
+        self.send_btn.setText("Send")
         self.send_btn.setEnabled(self.serial_worker.is_connected())
         self.batch_text.setReadOnly(False)
+        self.loop_checkbox.setEnabled(True)
         self.status_bar.showMessage("Send stopped")
 
     def _send_next_batch_line(self) -> None:
@@ -404,10 +421,20 @@ class MainWindow(QMainWindow):
                 # No delay, send immediately
                 self._send_next_batch_line()
         else:
-            # All done
-            self._stop_batch_send()
-            if len(self._batch_lines) > 1:
-                self.status_bar.showMessage("All commands sent")
+            # Check if loop is enabled
+            if self.loop_checkbox.isChecked():
+                # Reset index and continue
+                self._batch_index = 0
+                interval = self.interval_spin.value()
+                if interval > 0:
+                    self._batch_timer.start(interval)
+                else:
+                    self._send_next_batch_line()
+            else:
+                # All done
+                self._stop_batch_send()
+                if len(self._batch_lines) > 1:
+                    self.status_bar.showMessage("All commands sent")
 
     def _on_data_received(self, data: bytes) -> None:
         """Handle received data from serial port."""
